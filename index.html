@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <h1>Drawing App</h1>
+            <div class="controls">
+                <button id="circleBtn" class="tool-btn active">Add Circle <span class="shortcut">(C)</span></button>
+                <button id="lineBtn" class="tool-btn">Add Line <span class="shortcut">(L)</span></button>
+                <button id="clearBtn" class="tool-btn clear">Clear Canvas</button>
+            </div>
+            <div class="info">
+                <p>Current mode: <span id="currentMode">Add Circle</span></p>
+            </div>
+        </div>
+        <canvas id="drawingCanvas"></canvas>
+        <div class="legend" id="legend">
+            <h3>Circles:</h3>
+            <ul id="circleList"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
