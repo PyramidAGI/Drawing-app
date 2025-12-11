@@ -2,16 +2,24 @@ const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
 const circleBtn = document.getElementById('circleBtn');
 const lineBtn = document.getElementById('lineBtn');
+const moveBtn = document.getElementById('moveBtn');
 const clearBtn = document.getElementById('clearBtn');
 const currentModeSpan = document.getElementById('currentMode');
 const circleList = document.getElementById('circleList');
+const selectedCircleInfo = document.getElementById('selectedCircleInfo');
+const dialogueEditor = document.getElementById('dialogueEditor');
+const dialogueText = document.getElementById('dialogueText');
 
 // Drawing state - declare before functions that use them
-let currentMode = 'circle'; // 'circle' or 'line'
+let currentMode = 'circle'; // 'circle', 'line', or 'move'
 let isDrawing = false;
 let startX = 0;
 let startY = 0;
 let startCircle = null; // Circle where line starts
+let selectedCircle = null; // Currently selected circle
+let movingCircle = null; // Circle being moved
+let circleOffsetX = 0; // Offset from mouse to circle center when starting to move
+let circleOffsetY = 0;
 let circles = [];
 let lines = [];
 
@@ -22,15 +30,23 @@ class Circle {
         this.y = y;
         this.radius = radius;
         this.name = name;
+        this.dialogue = ''; // Dialogue turn text
     }
 
-    draw() {
+    draw(isSelected = false) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = '#667eea';
-        ctx.lineWidth = 3;
+        
+        // Draw selected state with different color
+        if (isSelected) {
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 4;
+        } else {
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+        }
         ctx.stroke();
-        ctx.fillStyle = 'rgba(102, 126, 234, 0.1)';
+        ctx.fillStyle = isSelected ? 'rgba(255, 107, 107, 0.15)' : 'rgba(102, 126, 234, 0.1)';
         ctx.fill();
         
         // Draw name
@@ -142,11 +158,52 @@ function getCircleToCircleConnection(circle1, circle2) {
     };
 }
 
+// Find circle at a point
+function findCircleAtPoint(x, y) {
+    for (const circle of circles) {
+        const distance = Math.sqrt(
+            Math.pow(x - circle.x, 2) + Math.pow(y - circle.y, 2)
+        );
+        if (distance <= circle.radius) {
+            return circle;
+        }
+    }
+    return null;
+}
+
+// Update line positions when a circle moves
+function updateLinesForCircle(circle) {
+    lines.forEach(line => {
+        if (line.circle1 === circle || line.circle2 === circle) {
+            const connection = getCircleToCircleConnection(line.circle1, line.circle2);
+            line.x1 = connection.x1;
+            line.y1 = connection.y1;
+            line.x2 = connection.x2;
+            line.y2 = connection.y2;
+        }
+    });
+}
+
+// Update dialogue UI
+function updateDialogueUI() {
+    if (selectedCircle) {
+        selectedCircleInfo.innerHTML = `
+            <div class="circle-name">${selectedCircle.name || 'Unnamed Circle'}</div>
+        `;
+        dialogueEditor.style.display = 'flex';
+        dialogueText.value = selectedCircle.dialogue || '';
+    } else {
+        selectedCircleInfo.innerHTML = '<p class="no-selection">Click on a circle to edit its dialogue</p>';
+        dialogueEditor.style.display = 'none';
+        dialogueText.value = '';
+    }
+}
+
 // Redraw everything
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     lines.forEach(line => line.draw());
-    circles.forEach(circle => circle.draw());
+    circles.forEach(circle => circle.draw(circle === selectedCircle));
     updateLegend();
 }
 
@@ -180,12 +237,23 @@ function switchToLineMode() {
     currentMode = 'line';
     lineBtn.classList.add('active');
     circleBtn.classList.remove('active');
+    moveBtn.classList.remove('active');
     currentModeSpan.textContent = 'Connect Circles';
+}
+
+// Switch to move mode
+function switchToMoveMode() {
+    currentMode = 'move';
+    moveBtn.classList.add('active');
+    circleBtn.classList.remove('active');
+    lineBtn.classList.remove('active');
+    currentModeSpan.textContent = 'Move Circle';
 }
 
 // Mode switching
 circleBtn.addEventListener('click', switchToCircleMode);
 lineBtn.addEventListener('click', switchToLineMode);
+moveBtn.addEventListener('click', switchToMoveMode);
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
@@ -200,6 +268,9 @@ document.addEventListener('keydown', (e) => {
     } else if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         switchToLineMode();
+    } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        switchToMoveMode();
     }
 });
 
@@ -208,6 +279,8 @@ clearBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the canvas?')) {
         circles = [];
         lines = [];
+        selectedCircle = null;
+        updateDialogueUI();
         redraw();
     }
 });
@@ -218,7 +291,19 @@ canvas.addEventListener('mousedown', (e) => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    if (currentMode === 'line') {
+    if (currentMode === 'move') {
+        // Find circle at click position
+        movingCircle = findCircleAtPoint(x, y);
+        if (movingCircle) {
+            isDrawing = true;
+            // Calculate offset from mouse to circle center
+            circleOffsetX = x - movingCircle.x;
+            circleOffsetY = y - movingCircle.y;
+            // Select the circle being moved
+            selectedCircle = movingCircle;
+            updateDialogueUI();
+        }
+    } else if (currentMode === 'line') {
         // Find nearest circle to start the line
         startCircle = findNearestCircle(x, y);
         if (startCircle) {
@@ -239,7 +324,14 @@ canvas.addEventListener('mousemove', (e) => {
     const currentX = e.clientX - rect.left;
     const currentY = e.clientY - rect.top;
     
-    if (currentMode === 'line' && isDrawing && startCircle) {
+    if (currentMode === 'move' && isDrawing && movingCircle) {
+        // Move the circle
+        movingCircle.x = currentX - circleOffsetX;
+        movingCircle.y = currentY - circleOffsetY;
+        // Update lines connected to this circle
+        updateLinesForCircle(movingCircle);
+        redraw();
+    } else if (currentMode === 'line' && isDrawing && startCircle) {
         // Find nearest circle at current position
         const endCircle = findNearestCircle(currentX, currentY);
         
@@ -285,15 +377,26 @@ canvas.addEventListener('mousemove', (e) => {
     }
 });
 
+let justCreated = false; // Track if we just created something
+
 canvas.addEventListener('mouseup', async (e) => {
     if (!isDrawing) return;
     isDrawing = false;
+    justCreated = false;
     
     const rect = canvas.getBoundingClientRect();
     const endX = e.clientX - rect.left;
     const endY = e.clientY - rect.top;
     
-    if (currentMode === 'line' && startCircle) {
+    if (currentMode === 'move' && movingCircle) {
+        // Finish moving the circle
+        movingCircle.x = endX - circleOffsetX;
+        movingCircle.y = endY - circleOffsetY;
+        // Update lines connected to this circle
+        updateLinesForCircle(movingCircle);
+        movingCircle = null;
+        redraw();
+    } else if (currentMode === 'line' && startCircle) {
         // Find nearest circle at end position
         const endCircle = findNearestCircle(endX, endY);
         
@@ -309,6 +412,7 @@ canvas.addEventListener('mouseup', async (e) => {
                 endCircle
             );
             lines.push(line);
+            justCreated = true;
             redraw();
         }
         startCircle = null;
@@ -321,6 +425,35 @@ canvas.addEventListener('mouseup', async (e) => {
             const name = prompt('Enter a name for the circle:');
             const circle = new Circle(startX, startY, radius, name || '');
             circles.push(circle);
+            justCreated = true;
+            redraw();
+        }
+    }
+});
+
+// Handle circle selection on click (when not drawing)
+canvas.addEventListener('click', (e) => {
+    // Don't select if we just created something or if we're in the middle of drawing
+    if (justCreated || isDrawing) {
+        justCreated = false;
+        return;
+    }
+    
+    // Only allow selection when not actively drawing (move mode handles selection in mousedown)
+    if (currentMode === 'circle' || currentMode === 'line') {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const clickedCircle = findCircleAtPoint(x, y);
+        if (clickedCircle) {
+            selectedCircle = clickedCircle;
+            updateDialogueUI();
+            redraw();
+        } else {
+            // Deselect if clicking on empty space
+            selectedCircle = null;
+            updateDialogueUI();
             redraw();
         }
     }
@@ -330,6 +463,7 @@ canvas.addEventListener('mouseleave', () => {
     if (isDrawing) {
         isDrawing = false;
         startCircle = null;
+        movingCircle = null;
         redraw();
     }
 });
@@ -341,7 +475,15 @@ function resizeCanvas() {
     redraw();
 }
 
+// Dialogue text change handler
+dialogueText.addEventListener('input', (e) => {
+    if (selectedCircle) {
+        selectedCircle.dialogue = e.target.value;
+    }
+});
+
 // Initialize
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 updateLegend();
+updateDialogueUI();

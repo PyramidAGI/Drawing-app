@@ -13,16 +13,31 @@
             <div class="controls">
                 <button id="circleBtn" class="tool-btn active">Add Circle <span class="shortcut">(C)</span></button>
                 <button id="lineBtn" class="tool-btn">Add Line <span class="shortcut">(L)</span></button>
+                <button id="moveBtn" class="tool-btn">Move Circle <span class="shortcut">(M)</span></button>
                 <button id="clearBtn" class="tool-btn clear">Clear Canvas</button>
             </div>
             <div class="info">
                 <p>Current mode: <span id="currentMode">Add Circle</span></p>
             </div>
         </div>
-        <canvas id="drawingCanvas"></canvas>
-        <div class="legend" id="legend">
-            <h3>Circles:</h3>
-            <ul id="circleList"></ul>
+        <div class="main-content">
+            <div class="canvas-container">
+                <canvas id="drawingCanvas"></canvas>
+                <div class="legend" id="legend">
+                    <h3>Circles:</h3>
+                    <ul id="circleList"></ul>
+                </div>
+            </div>
+            <div class="dialogue-panel">
+                <h3>Dialogue Turn</h3>
+                <div class="selected-circle-info" id="selectedCircleInfo">
+                    <p class="no-selection">Click on a circle to edit its dialogue</p>
+                </div>
+                <div class="dialogue-editor" id="dialogueEditor" style="display: none;">
+                    <label for="dialogueText">Dialogue Text:</label>
+                    <textarea id="dialogueText" rows="10" placeholder="Enter the dialogue turn text here..."></textarea>
+                </div>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
