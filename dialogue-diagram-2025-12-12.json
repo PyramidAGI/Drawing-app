@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "circles": [
+    {
+      "x": 229,
+      "y": 148.515625,
+      "radius": 66.85057965343307,
+      "name": "dia1",
+      "dialogue": ""
+    },
+    {
+      "x": 374,
+      "y": 252.515625,
+      "radius": 57.48912940721924,
+      "name": "dia2",
+      "dialogue": "L: Ik ga u zo doorverbinden. Hiervoor heb ik eerst nog enkele gegevens nodig. Wat is de naam van uw zoon en de leeftijd?"
+    },
+    {
+      "x": 566,
+      "y": 299.515625,
+      "radius": 61.40032573203501,
+      "name": "dia3",
+      "dialogue": ""
+    }
+  ],
+  "lines": [
+    {
+      "x1": 283.3225102062043,
+      "y1": 187.47797714789823,
+      "x2": 327.284566339447,
+      "y2": 219.00938292622408,
+      "circle1Index": 0,
+      "circle2Index": 1
+    },
+    {
+      "x1": 429.8404078868527,
+      "y1": 266.18489151396915,
+      "x2": 506.360564360331,
+      "y2": 284.91638815070604,
+      "circle1Index": 1,
+      "circle2Index": 2
+    }
+  ],
+  "savedAt": "2025-12-12T10:53:06.611Z"
+}

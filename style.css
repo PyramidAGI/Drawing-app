@@ -75,6 +75,14 @@ body {
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
 }
 
+.tool-btn.save {
+    background: rgba(76, 175, 80, 0.8);
+}
+
+.tool-btn.save:hover {
+    background: rgba(76, 175, 80, 1);
+}
+
 .tool-btn.clear {
     background: rgba(255, 77, 77, 0.8);
 }

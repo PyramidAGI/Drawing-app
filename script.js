@@ -4,6 +4,7 @@ const circleBtn = document.getElementById('circleBtn');
 const lineBtn = document.getElementById('lineBtn');
 const moveBtn = document.getElementById('moveBtn');
 const deleteBtn = document.getElementById('deleteBtn');
+const saveBtn = document.getElementById('saveBtn');
 const clearBtn = document.getElementById('clearBtn');
 const currentModeSpan = document.getElementById('currentMode');
 const circleList = document.getElementById('circleList');
@@ -320,6 +321,63 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
         switchToMoveMode();
     }
+});
+
+// Save drawing to JSON file
+function saveDrawing() {
+    // Serialize circles
+    const circlesData = circles.map(circle => ({
+        x: circle.x,
+        y: circle.y,
+        radius: circle.radius,
+        name: circle.name || '',
+        dialogue: circle.dialogue || ''
+    }));
+    
+    // Serialize lines with circle indices
+    const linesData = lines.map(line => {
+        const circle1Index = circles.indexOf(line.circle1);
+        const circle2Index = circles.indexOf(line.circle2);
+        return {
+            x1: line.x1,
+            y1: line.y1,
+            x2: line.x2,
+            y2: line.y2,
+            circle1Index: circle1Index,
+            circle2Index: circle2Index
+        };
+    });
+    
+    // Create the data object
+    const drawingData = {
+        version: '1.0',
+        circles: circlesData,
+        lines: linesData,
+        savedAt: new Date().toISOString()
+    };
+    
+    // Convert to JSON string
+    const jsonString = JSON.stringify(drawingData, null, 2);
+    
+    // Create a blob and download
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dialogue-diagram-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Save button event listener
+saveBtn.addEventListener('click', () => {
+    if (circles.length === 0 && lines.length === 0) {
+        alert('Nothing to save. Create some circles and lines first!');
+        return;
+    }
+    saveDrawing();
 });
 
 // Clear canvas
