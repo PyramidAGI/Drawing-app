@@ -83,6 +83,14 @@ body {
     background: rgba(76, 175, 80, 1);
 }
 
+.tool-btn.load {
+    background: rgba(33, 150, 243, 0.8);
+}
+
+.tool-btn.load:hover {
+    background: rgba(33, 150, 243, 1);
+}
+
 .tool-btn.clear {
     background: rgba(255, 77, 77, 0.8);
 }

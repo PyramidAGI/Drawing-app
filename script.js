@@ -5,6 +5,8 @@ const lineBtn = document.getElementById('lineBtn');
 const moveBtn = document.getElementById('moveBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const saveBtn = document.getElementById('saveBtn');
+const loadBtn = document.getElementById('loadBtn');
+const fileInput = document.getElementById('fileInput');
 const clearBtn = document.getElementById('clearBtn');
 const currentModeSpan = document.getElementById('currentMode');
 const circleList = document.getElementById('circleList');
@@ -378,6 +380,103 @@ saveBtn.addEventListener('click', () => {
         return;
     }
     saveDrawing();
+});
+
+// Load drawing from JSON file
+function loadDrawing(file) {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+        try {
+            const drawingData = JSON.parse(e.target.result);
+            
+            // Validate the data structure
+            if (!drawingData.circles || !Array.isArray(drawingData.circles)) {
+                throw new Error('Invalid file format: missing or invalid circles data');
+            }
+            if (!drawingData.lines || !Array.isArray(drawingData.lines)) {
+                throw new Error('Invalid file format: missing or invalid lines data');
+            }
+            
+            // Ask for confirmation if there's existing content
+            if (circles.length > 0 || lines.length > 0) {
+                if (!confirm('Loading will replace the current drawing. Continue?')) {
+                    return;
+                }
+            }
+            
+            // Clear current drawing
+            circles = [];
+            lines = [];
+            selectedCircle = null;
+            
+            // Reconstruct circles
+            drawingData.circles.forEach(circleData => {
+                const circle = new Circle(
+                    circleData.x,
+                    circleData.y,
+                    circleData.radius,
+                    circleData.name || ''
+                );
+                circle.dialogue = circleData.dialogue || '';
+                circles.push(circle);
+            });
+            
+            // Reconstruct lines
+            drawingData.lines.forEach(lineData => {
+                const circle1 = circles[lineData.circle1Index];
+                const circle2 = circles[lineData.circle2Index];
+                
+                if (circle1 && circle2) {
+                    // Recalculate connection points to ensure accuracy
+                    const connection = getCircleToCircleConnection(circle1, circle2);
+                    const line = new Line(
+                        connection.x1,
+                        connection.y1,
+                        connection.x2,
+                        connection.y2,
+                        circle1,
+                        circle2
+                    );
+                    lines.push(line);
+                }
+            });
+            
+            // Update UI and redraw
+            updateDialogueUI();
+            redraw();
+            
+            alert(`Successfully loaded ${circles.length} circle(s) and ${lines.length} line(s)!`);
+        } catch (error) {
+            alert(`Error loading file: ${error.message}`);
+            console.error('Load error:', error);
+        }
+    };
+    
+    reader.onerror = () => {
+        alert('Error reading file. Please try again.');
+    };
+    
+    reader.readAsText(file);
+}
+
+// Load button event listener
+loadBtn.addEventListener('click', () => {
+    fileInput.click();
+});
+
+// File input change event listener
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        if (file.type === 'application/json' || file.name.endsWith('.json')) {
+            loadDrawing(file);
+        } else {
+            alert('Please select a valid JSON file.');
+        }
+        // Reset the input so the same file can be loaded again
+        fileInput.value = '';
+    }
 });
 
 // Clear canvas
