@@ -62,6 +62,19 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.tool-btn.delete {
+    background: rgba(255, 152, 0, 0.8);
+}
+
+.tool-btn.delete:hover {
+    background: rgba(255, 152, 0, 1);
+}
+
+.tool-btn.delete.active {
+    background: rgba(255, 152, 0, 1);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
 .tool-btn.clear {
     background: rgba(255, 77, 77, 0.8);
 }

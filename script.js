@@ -3,6 +3,7 @@ const ctx = canvas.getContext('2d');
 const circleBtn = document.getElementById('circleBtn');
 const lineBtn = document.getElementById('lineBtn');
 const moveBtn = document.getElementById('moveBtn');
+const deleteBtn = document.getElementById('deleteBtn');
 const clearBtn = document.getElementById('clearBtn');
 const currentModeSpan = document.getElementById('currentMode');
 const circleList = document.getElementById('circleList');
@@ -11,7 +12,7 @@ const dialogueEditor = document.getElementById('dialogueEditor');
 const dialogueText = document.getElementById('dialogueText');
 
 // Drawing state - declare before functions that use them
-let currentMode = 'circle'; // 'circle', 'line', or 'move'
+let currentMode = 'circle'; // 'circle', 'line', 'move', or 'delete'
 let isDrawing = false;
 let startX = 0;
 let startY = 0;
@@ -184,6 +185,28 @@ function updateLinesForCircle(circle) {
     });
 }
 
+// Delete a circle and all lines connected to it
+function deleteCircle(circle) {
+    if (!circle) return;
+    
+    // Remove all lines connected to this circle
+    lines = lines.filter(line => line.circle1 !== circle && line.circle2 !== circle);
+    
+    // Remove the circle
+    const index = circles.indexOf(circle);
+    if (index > -1) {
+        circles.splice(index, 1);
+    }
+    
+    // Clear selection if this circle was selected
+    if (selectedCircle === circle) {
+        selectedCircle = null;
+        updateDialogueUI();
+    }
+    
+    redraw();
+}
+
 // Update dialogue UI
 function updateDialogueUI() {
     if (selectedCircle) {
@@ -229,6 +252,8 @@ function switchToCircleMode() {
     currentMode = 'circle';
     circleBtn.classList.add('active');
     lineBtn.classList.remove('active');
+    moveBtn.classList.remove('active');
+    deleteBtn.classList.remove('active');
     currentModeSpan.textContent = 'Add Circle';
 }
 
@@ -238,6 +263,7 @@ function switchToLineMode() {
     lineBtn.classList.add('active');
     circleBtn.classList.remove('active');
     moveBtn.classList.remove('active');
+    deleteBtn.classList.remove('active');
     currentModeSpan.textContent = 'Connect Circles';
 }
 
@@ -247,13 +273,35 @@ function switchToMoveMode() {
     moveBtn.classList.add('active');
     circleBtn.classList.remove('active');
     lineBtn.classList.remove('active');
+    deleteBtn.classList.remove('active');
     currentModeSpan.textContent = 'Move Circle';
+}
+
+// Switch to delete mode
+function switchToDeleteMode() {
+    currentMode = 'delete';
+    deleteBtn.classList.add('active');
+    circleBtn.classList.remove('active');
+    lineBtn.classList.remove('active');
+    moveBtn.classList.remove('active');
+    currentModeSpan.textContent = 'Delete Circle';
 }
 
 // Mode switching
 circleBtn.addEventListener('click', switchToCircleMode);
 lineBtn.addEventListener('click', switchToLineMode);
 moveBtn.addEventListener('click', switchToMoveMode);
+deleteBtn.addEventListener('click', () => {
+    // If a circle is selected, delete it immediately
+    if (selectedCircle) {
+        if (confirm(`Delete circle "${selectedCircle.name || 'Unnamed'}"?`)) {
+            deleteCircle(selectedCircle);
+        }
+    } else {
+        // Otherwise, enter delete mode
+        switchToDeleteMode();
+    }
+});
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
@@ -439,13 +487,20 @@ canvas.addEventListener('click', (e) => {
         return;
     }
     
-    // Only allow selection when not actively drawing (move mode handles selection in mousedown)
-    if (currentMode === 'circle' || currentMode === 'line') {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const clickedCircle = findCircleAtPoint(x, y);
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const clickedCircle = findCircleAtPoint(x, y);
+    
+    if (currentMode === 'delete') {
+        // Delete mode: delete the clicked circle
+        if (clickedCircle) {
+            if (confirm(`Delete circle "${clickedCircle.name || 'Unnamed'}"?`)) {
+                deleteCircle(clickedCircle);
+            }
+        }
+    } else if (currentMode === 'circle' || currentMode === 'line') {
+        // Only allow selection when not actively drawing (move mode handles selection in mousedown)
         if (clickedCircle) {
             selectedCircle = clickedCircle;
             updateDialogueUI();
