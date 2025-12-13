@@ -1,7 +1,7 @@
 create table(
 id integer primary key autoincrement,
-scenario varchar(30) not null,
-description varchar(30) not null,
+scenario varchar(50) not null,
+description varchar(100) not null,
 owner varchar(30),
 created_at datetime default current_timestamp
 )

@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
 import os
+import webbrowser
 
 DB_FILE = 'database.db'
 CONFIG_FILE = 'config.txt'
@@ -163,7 +164,7 @@ class ScenarioGUI:
             text="Save Scenario",
             font=('Arial', 11, 'bold'),
             bg='#4CAF50',
-            fg='white',
+            fg='black',
             padx=20,
             pady=10,
             cursor='hand2',
@@ -178,7 +179,7 @@ class ScenarioGUI:
             text="Clear Form",
             font=('Arial', 11),
             bg='#ff9800',
-            fg='white',
+            fg='black',
             padx=20,
             pady=10,
             cursor='hand2',
@@ -193,7 +194,7 @@ class ScenarioGUI:
             text="Refresh List",
             font=('Arial', 11),
             bg='#2196F3',
-            fg='white',
+            fg='black',
             padx=20,
             pady=10,
             cursor='hand2',
@@ -201,6 +202,21 @@ class ScenarioGUI:
             relief=tk.FLAT
         )
         refresh_btn.pack(side=tk.LEFT, padx=5)
+        
+        # Open HTML button
+        open_html_btn = tk.Button(
+            button_frame,
+            text="Open Drawing App",
+            font=('Arial', 11),
+            bg='#9C27B0',
+            fg='black',
+            padx=20,
+            pady=10,
+            cursor='hand2',
+            command=self.open_index_html,
+            relief=tk.FLAT
+        )
+        open_html_btn.pack(side=tk.LEFT, padx=5)
         
         # Scenarios list frame
         list_frame = tk.LabelFrame(
@@ -359,6 +375,24 @@ class ScenarioGUI:
         self.owner_entry.delete(0, tk.END)
         self.scenario_entry.focus()
         self.status_label.config(text="Form cleared")
+    
+    def open_index_html(self):
+        """Open index.html in the default web browser."""
+        html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+        
+        if not os.path.exists(html_file):
+            messagebox.showerror("File Not Found", f"Could not find index.html at:\n{html_file}")
+            self.status_label.config(text="Error: index.html not found")
+            return
+        
+        try:
+            # Convert to file:// URL format
+            file_url = f"file://{os.path.abspath(html_file)}"
+            webbrowser.open(file_url)
+            self.status_label.config(text="Opened index.html in browser")
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not open index.html:\n{e}")
+            self.status_label.config(text="Error opening index.html")
     
     def load_scenarios(self):
         """Load scenarios from database and display in treeview."""
