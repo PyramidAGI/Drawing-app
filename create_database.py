@@ -30,8 +30,8 @@ def create_database():
     create_table_sql = """
     CREATE TABLE scenarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        scenario VARCHAR(30) NOT NULL,
-        description VARCHAR(30) NOT NULL,
+        scenario VARCHAR(50) NOT NULL,
+        description VARCHAR(100) NOT NULL,
         owner VARCHAR(30),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
